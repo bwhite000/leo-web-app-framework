@@ -1,5 +1,6 @@
-import InvalidArgumentTypeException from "framework/code/core/invalid_argument_type_exception";
-import ResourceNotFoundException from "framework/code/core/resource_not_found_exception";
+import ElementNotFoundException from "./element_not_found_exception"
+import InvalidArgumentTypeException from "./invalid_argument_type_exception"
+import ResourceNotFoundException from "./resource_not_found_exception"
 
 interface Json {
     [x: string]: any
@@ -7,7 +8,7 @@ interface Json {
 
 const Utils = {
     "_cachedResources": null,
-    "doesResourceElementExist" : (document.querySelector("[data-id='resources']") != null),
+    "doesResourceElementExist" : (document.querySelector("template[data-view='resources']") != null),
     getTemplateByName(name: string): Document {
         const templateElm = <HTMLLinkElement|null>document.querySelector(`[id="${name}"]`);
         if (templateElm == null) { throw new ResourceNotFoundException(`Res.layout.${name}`); }
@@ -22,7 +23,7 @@ const Utils = {
             return this._cachedResources;
         }
 
-        const resourcesElm = <HTMLTemplateElement|null>document.querySelector("[data-id='resources']");
+        const resourcesElm = <HTMLTemplateElement|null>document.querySelector("template[data-view='resources']");
         if (resourcesElm == null) { throw new ResourceNotFoundException() }
 
         const resources = resourcesElm.content;
@@ -32,7 +33,29 @@ const Utils = {
     }
 };
 
-const drawableRes: {[x: string]: any} = {};
+const drawableRes: {ids: Map<string, string>, elms: Map<string, (SVGElement|HTMLImageElement)>, [x: string]: string} = {
+    "ids": new Map<string, string>(),
+    "elms": new Map<string, (SVGElement|HTMLImageElement)>(),
+    _indexResources() {
+        const drawables = <NodeListOf<HTMLElement>>Utils.resources.querySelectorAll("drawable");
+
+        // Loop through all of the drawable Elements.
+        for (const elm of drawables) {
+            // Res.drawable.<name>
+            const name = elm.dataset.name;
+
+            // Check that the name value is not empty.
+            if (name != null && name != "") {
+                const targetElm = <SVGElement|HTMLImageElement>elm.firstElementChild;
+
+                // Check that the resource is of an acceptable type.
+                if (targetElm instanceof SVGElement || targetElm instanceof HTMLImageElement) {
+                    drawableRes.elms.set(name, targetElm);
+                }
+            }
+        }
+    }
+};
 
 export interface MenuJson {
     items: ItemJson[]
@@ -42,7 +65,8 @@ interface ItemJson {
     icon: string
     title: string
 }
-const menuRes: {[x: string]: any} = {
+const menuRes: {ids: Map<string, string>, [x: string]: any} = {
+    "ids": new Map<string, string>(),
     converHtmlToJson(menuElm: HTMLElement): MenuJson {
         const json = <MenuJson>{
             "items": <ItemJson[]>[]
@@ -62,17 +86,75 @@ const menuRes: {[x: string]: any} = {
     }
 };
 
-const Res = {
-    drawable: new Proxy(drawableRes, {
-        get(_, name: PropertyKey) {
-            if (Utils.doesResourceElementExist == true) {
-                const resource = Utils.resources.querySelector(`drawable[data-name='${name}']`);
-                if (resource == null) { throw new ResourceNotFoundException() }
+interface ResInterface {
+    ids: Set<string>
+    elms: Map<string, HTMLElement>
+    getResourceById(id: string): HTMLElement
+    _indexResources(): void,
+    id: {[x: string]: string}
+    drawable: any
+    layout: any
+    menu: {[x: string]: MenuJson}
+}
 
-                return <SVGElement>resource.firstElementChild.cloneNode(true);
+const Res: ResInterface = {
+    "ids": new Set<string>(),
+    "elms": new Map<string, HTMLElement>(),
+    getResourceById(id: string): HTMLElement {
+        return <HTMLElement>Res.elms.get(id).cloneNode(true);
+    },
+    _indexResources(): void {
+        const resourcesElm = <HTMLTemplateElement|null>document.querySelector("template[data-view='resources']");
+        if (resourcesElm == null) { throw new ElementNotFoundException() }
+
+        const templateContent = resourcesElm.content;
+        const idElms = <NodeListOf<HTMLElement>>templateContent.querySelectorAll("[data-id]");
+
+        // Loop through the drawables and assign IDs to their names.
+        for (let elm of idElms) {
+            let id = elm.dataset.id;
+
+            if (elm.nodeName == "DRAWABLE") {
+                elm = <HTMLElement>elm.querySelector("*");
             }
 
-            throw new ResourceNotFoundException();
+            if (id != null || id != "") {
+                // Remove the ID prefix, if present.
+                if (id.startsWith("@+id/")) {
+                    id = id.replace(/^@\+id\//, "");
+                }
+
+                // const randomID = `${Math.floor(Math.random() * 10000)}-${window.performance.now()}`;
+                // elm.dataset.resourceId = randomID;
+                Res.ids.add(id);
+                Res.elms.set(id, elm);
+            }
+        }
+    },
+    id: new Proxy({}, {
+        get(_, name: PropertyKey) {
+            const nameStr = `${name}`;
+
+            const elm = document.querySelector(`[data-id="@+id/${nameStr}"]`);
+
+            // Check if this resource has been indexed, if so, return the key as
+            // the Element's ID.
+            if (elm != null || Res.ids.has(nameStr)) {
+                return nameStr;
+            }
+
+            throw new ResourceNotFoundException(`R.id.${nameStr}`);
+        }
+    }),
+    drawable: new Proxy(drawableRes, {
+        get(target, name: PropertyKey) {
+            const nameStr = `${name}`;
+
+            if (drawableRes.elms.has(nameStr)) {
+                return drawableRes.elms.get(nameStr);
+            }
+
+            throw new ResourceNotFoundException(`Res.drawables.${nameStr}`);
         }
     }),
     layout: new Proxy(<{[x: string]: Document}>{}, {

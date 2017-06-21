@@ -1,4 +1,4 @@
-export class ElementNotFoundException extends Error {
+export default class ElementNotFoundException extends Error {
     message: string = "The Element was not found";
 
     constructor(selector?: string) {

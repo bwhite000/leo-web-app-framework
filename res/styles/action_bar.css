@@ -1,0 +1,29 @@
+[data-view="action-bar"] {
+    display: flex;
+}
+
+[data-view="action-bar"] > .title {
+    flex-grow: 1;
+}
+
+[data-view="action-bar"] > * {
+    display: inline-block;
+}
+
+[data-view="action-bar"] > .menu_items {
+    display: flex;
+}
+
+[data-view="action-bar"] > .menu_items > .menu_item {
+    cursor: pointer;
+    display: flex;
+    height: 48px;
+    user-select: none;
+    width: 48px;
+    vertical-align: middle;
+}
+
+[data-view="action-bar"] > .menu_items > .menu_item > svg {
+    fill: #fff;
+    margin-top: 12px;
+}

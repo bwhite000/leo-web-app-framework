@@ -5,7 +5,7 @@ export default class ResourceNotFoundException extends Error {
         super();
 
         if (resName != null) {
-            this.message = `The ${resName} resource was not found`;
+            this.message = `The "${resName}" resource was not found`;
         }
     }
 

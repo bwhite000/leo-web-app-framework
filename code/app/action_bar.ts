@@ -1,18 +1,18 @@
-import Res from "framework/code/core/res"
-import { MenuJson } from "framework/code/core/res"
-import ResourceNotFoundException from "framework/code/core/resource_not_found_exception"
-import { StreamController, Stream } from "framework/code/core/stream"
+import Res from "../core/res"
+import { MenuJson } from "../core/res"
+import ResourceNotFoundException from "../core/resource_not_found_exception"
+import { StreamController, Stream } from "../core/stream"
 
 export default class ActionBar {
     private _onMenuItemSelectedStreamController: StreamController<string> = new StreamController();
 
+    static Tab = class {
+        constructor() {}
+    };
+
     constructor() {
         // Allow the event listener to have the correct "this" value.
         this._onMenuItemSelected = this._onMenuItemSelected.bind(this);
-    }
-
-    static Tab = class Tab {
-        constructor() {}
     }
 
     get onMenuItemSelected(): Stream<string> {
@@ -28,9 +28,10 @@ export default class ActionBar {
 
         // Loop through the developer defined menu items.
         for (const item of menuJson.items) {
-            const iconName = item.icon.replace("@drawable/", "");
-            const iconElm = Res.drawable[iconName];
+            const iconName = item.icon.replace(/^@drawable\//, "");
+            const iconElm = Res.getResourceById(Res.id[iconName]);
 
+            iconElm.title = item.title;
             iconElm.dataset.id = item.id;
 
             iconElm.addEventListener("click", this._onMenuItemSelected);
@@ -39,21 +40,28 @@ export default class ActionBar {
         }
     }
 
-    setHomeButton(): void {}
+    setHomeButton(elm: Node): void {
+        document.querySelector("[data-view='action-bar'] .home_button").appendChild(elm);
+    }
 
-    private _addMenuItem(iconElm: HTMLElement): void {
-        const actionBarElm = <HTMLDivElement|null>document.querySelector("header[data-view='action-bar']");
+    private _addMenuItem(iconElm: SVGElement|HTMLImageElement): void {
+        const actionBarElm = <HTMLDivElement|null>document.querySelector("header[data-view='action-bar'] .menu_items");
         if (actionBarElm == null) { throw new ResourceNotFoundException() }
 
-        actionBarElm.appendChild(iconElm);
+        const container = document.createElement("div");
+        container.classList.add("menu_item");
+        container.appendChild(iconElm);
+
+        actionBarElm.appendChild(container);
     }
 
     private _onMenuItemSelected(evt: MouseEvent): void {
         const elm = <HTMLElement>evt.currentTarget;
         const dataID = elm.dataset.id;
+        const resId = Res.id[dataID];
 
         if (dataID != null) {
-            (<ActionBar>this)._onMenuItemSelectedStreamController.add(dataID);
+            (<ActionBar>this)._onMenuItemSelectedStreamController.add(resId);
         }
     }
 }

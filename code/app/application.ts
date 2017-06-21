@@ -1,4 +1,6 @@
-import BaseActivity from "framework/code/app/activity"
+import BaseActivity from "./activity"
+import ElementNotFoundException from "../core/element_not_found_exception"
+import Res from "../core/res"
 
 export interface UninstantiatedBaseActivity {
     new(): BaseActivity
@@ -52,9 +54,13 @@ export default abstract class Application {
         }
     }
 
+    /** */
     private static onDOMContentLoaded() {
         // Cleanup and remove this event listener.
         document.removeEventListener("DOMContentLoaded", Application.onDOMContentLoaded);
+
+        // Index the on-page resources.
+        Res._indexResources();
 
         // Determine which activity to start on.
         Application.determineCurrentActivity();
