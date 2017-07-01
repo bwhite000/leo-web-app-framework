@@ -1,0 +1,34 @@
+import Context from "./context";
+import { Stream } from "../core/stream";
+export default class Dialog {
+    context: Context;
+    protected elmFrag: DocumentFragment;
+    protected elm: HTMLElement;
+    isCreated: boolean;
+    isShowing: boolean;
+    isCancelled: boolean;
+    private onCancelStreamController;
+    private onDismissStreamController;
+    private onShowStreamController;
+    constructor(context: Context);
+    readonly onCancel: Stream<void>;
+    readonly onDismiss: Stream<void>;
+    readonly onShow: Stream<void>;
+    getContext(): Context;
+    create(): void;
+    show(): void;
+    hide(): void;
+    dismiss(): void;
+    protected onCreate(): void;
+    protected onStart(): void;
+    protected onStop(): void;
+    setContentView(view: HTMLElement): void;
+    addContentView(view: HTMLElement): void;
+    setTitle(title: string): void;
+    onBackPressed(): void;
+    onContentChanged(): void;
+    onAttachedToWindow(): void;
+    onDetachedFromWindow(): void;
+    cancel(): void;
+    querySelector(selector: string): HTMLElement;
+}

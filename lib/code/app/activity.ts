@@ -1,9 +1,11 @@
 import ActionBar from "./action_bar";
+import Context from "./context"
 import ElementNotFoundException from "../core/element_not_found_exception"
 import Fragment from "./fragment"
+import FragmentManager from "./fragment_manager"
 import InvalidArgumentTypeException from "../core/invalid_argument_type_exception"
 
-export class Activity {
+export class Activity extends Context {
     onCreate(): void {}
 
     onStart(): void {}
@@ -26,8 +28,8 @@ export class Activity {
 export default class BaseActivity extends Activity {
     private _actionBar: ActionBar = new ActionBar();
     private _rootElm: HTMLElement;
-    private currentFragment: Fragment;
-    private fragmentManager= new FragmentManager();
+    private currentContentView: Fragment;
+    private fragmentManager = new FragmentManager();
     private elms = {
         // Add the current context as the "this" value.
         "querySelector": this.querySelector.bind(this),
@@ -45,6 +47,9 @@ export default class BaseActivity extends Activity {
         const rootElm = <HTMLElement|null>document.querySelector("#viewport");
         if (rootElm == null) { throw new ElementNotFoundException("#viewport") }
         else { this._rootElm = rootElm }
+
+        this.fragmentManager.activity = <BaseActivity>this;
+        this.fragmentManager.context = <BaseActivity>this;
 
         setTimeout(() => this.onCreate(), 0);
     }
@@ -67,13 +72,13 @@ export default class BaseActivity extends Activity {
         return elm;
     }
 
-    setContentView(template: Document|HTMLTemplateElement|Fragment) {
+    setContentView(template: Document|HTMLTemplateElement|Fragment): void {
         if (template instanceof Fragment) {
-            this.currentFragment = template;
+            this.currentContentView = template;
 
-            this.currentFragment.onAttach();
-            this.currentFragment.onCreate();
-            const fragElm = this.currentFragment.onCreateView();
+            this.currentContentView.onAttach(<BaseActivity>this);
+            this.currentContentView.onCreate();
+            const fragElm = this.currentContentView.onCreateView();
 
             this.elms.content.appendChild(fragElm);
         } else if (template instanceof HTMLTemplateElement) {
@@ -96,62 +101,5 @@ export default class BaseActivity extends Activity {
 
     getFragmentManager(): FragmentManager {
         return this.fragmentManager;
-    }
-}
-
-class FragmentManager {
-    fragments = new Map<string, Fragment>();
-
-    /** Add a new fragment to a fragment container in this activity. */
-    add(containerID: string, fragment: Fragment) {
-        // Add this fragment to the index.
-        this.fragments.set(fragment.constructor.name, fragment);
-
-        // Get the container for appending the fragment's Element into.
-        const fragmentContainer = <HTMLElement|null>document.querySelector(`[data-id="@+id/${containerID}"]`);
-        if (fragmentContainer == null) { throw new ElementNotFoundException(`[data-id="@+id/${containerID}"]`) }
-
-        // Fire the initial events for the fragment.
-        fragment.onAttach();
-        fragment.onCreate();
-
-        // Get the fragment's Element.
-        const fragView = fragment.onCreateView();
-
-        // Add the fragment to the DOM.
-        fragmentContainer.appendChild(fragView);
-
-        // Fire the activated events for the fragment.
-        fragment.onStart();
-        fragment.onResume();
-    }
-
-    /** Remove a fragment from a fragment container in this activity. */
-    remove(containerID: string, fragmentClassName: string) {
-        const fragment = this.fragments.get(fragmentClassName);
-        if (fragment == null) { throw new FragmentNotFoundException() }
-
-        // Fire the events for removing the fragment.
-        fragment.onPause();
-        fragment.onStop();
-        fragment.onDestroyView();
-        fragment.onDestroy();
-
-        // Get the container that contains the specified fragment.
-        const fragmentContainer = <HTMLElement|null>document.querySelector(`[data-id="@+id/${containerID}"]`);
-        if (fragmentContainer == null) { throw new ElementNotFoundException(`[data-id="@+id/${containerID}"]`) }
-
-        // Empty the contents of the fragmentContainer.
-        fragmentContainer.innerHTML = "";
-    }
-
-    // replace() {}
-}
-
-class FragmentNotFoundException extends Error {
-    message: string = "Unable to locate the specified fragment.";
-
-    toString() {
-        return `${FragmentNotFoundException.name}: ${this.message}`;
     }
 }
