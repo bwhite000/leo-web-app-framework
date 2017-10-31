@@ -61,7 +61,10 @@ export default class Dialog {
      */
     dismiss(): void {
         if (this.elm != null) {
-            this.elm.remove();
+            this.elm.addEventListener("transitionend", () => {
+                this.elm.remove();
+            });
+            this.elm.classList.add("hide");
         }
     }
 
