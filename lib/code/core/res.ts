@@ -162,7 +162,7 @@ const Res: ResInterface = {
                 return drawableRes.elms.get(nameStr);
             }
 
-            throw new ResourceNotFoundException(`Res.drawables.${nameStr}`);
+            throw new ResourceNotFoundException(`Res.drawable.${nameStr}`);
         }
     }),
     layout: new Proxy(<{[x: string]: Document|DocumentFragment}>{}, {

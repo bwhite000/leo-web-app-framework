@@ -113,7 +113,7 @@ const Res = {
             if (drawableRes.elms.has(nameStr)) {
                 return drawableRes.elms.get(nameStr);
             }
-            throw new resource_not_found_exception_1.default(`Res.drawables.${nameStr}`);
+            throw new resource_not_found_exception_1.default(`Res.drawable.${nameStr}`);
         }
     }),
     layout: new Proxy({}, {
