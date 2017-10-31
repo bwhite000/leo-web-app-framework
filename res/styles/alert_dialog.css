@@ -1,0 +1,104 @@
+:root {
+    --box-shadow-depth-1: 0 1px 4px 0 rgba(0, 0, 0, 0.37);
+    --box-shadow-depth-2: 0 6px 10px 0 rgba(0, 0, 0, 0.3), 0 2px 2px 0 rgba(0, 0, 0, 0.2);
+}
+
+.alert-dialog-container {
+    background-color: rgba(0,0,0,0.54);
+    contain: paint size;
+    height: 100%;
+    left: 0px;
+    position: fixed;
+    top: 0px;
+    width: 100%;
+    z-index: 999;
+}
+
+.alert-dialog-container.hide {
+    opacity: 0 !important;
+    transition: opacity 250ms ease;
+    will-change: opacity;
+}
+
+.alert-dialog {
+    background-color: #fff;
+    border-radius: 2px;
+    box-shadow: var(--box-shadow-depth-2);
+    left: calc(50% - 32%);
+    max-height: 80%;
+    max-width: 65%;
+    min-width: 450px;
+    overflow: auto;
+    position: absolute;
+    top: 10%;
+    transform: translateY(20px) scale(0.97);
+    visibility: hidden;
+}
+
+.alert-dialog-container,
+.alert-dialog {
+    opacity: 0;
+    transition: opacity 150ms cubic-bezier(0,.68,.32,.99), transform 225ms cubic-bezier(0,.68,.32,.99);
+    will-change: opacity, transform;
+}
+
+.alert-dialog-container.show,
+.alert-dialog.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+.alert-dialog.show {
+    transform: translateY(0px) scale(1);
+}
+
+.alert-dialog .title {
+    font-size: 20px;
+    font-weight: 500;
+    padding: 24px 24px 20px 24px;
+}
+
+.alert-dialog .message {
+    font-size: 15px;
+    padding: 0 24px 24px 24px;
+}
+
+.alert-dialog ul.buttons-container {
+    margin: 0;
+    padding: 8px;
+    text-align: right;
+    text-transform: uppercase;
+}
+
+.alert-dialog ul.buttons-container > li {
+    border-radius: 3px;
+    box-sizing: border-box;
+    color: #047bfb;
+    cursor: pointer;
+    display: inline-block;
+    font-size: 14px;
+    min-width: 64px;
+    padding: 10px 8px;
+    text-align: center;
+    transition: background-color 125ms cubic-bezier(0.4, 0, 0.2, 1);
+    user-select: none;
+}
+
+.alert-dialog ul.buttons-container > li:not(:last-child) {
+    margin-right: 8px;
+}
+
+.alert-dialog ul.buttons-container > li.raised {
+    background-color: #047bfb;
+    box-shadow: var(--box-shadow-depth-1);
+    color: #fff;
+    transition: box-shadow 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.alert-dialog ul.buttons-container > li.raised:active {
+    box-shadow: var(--box-shadow-depth-2);
+}
+
+.alert-dialog ul.buttons-container > li:not(.raised):hover {
+    background-color: rgba(0,0,0,0.07);
+}
