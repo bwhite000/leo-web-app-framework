@@ -31,9 +31,28 @@ class Application {
             }
         }
     }
-    static onDOMContentLoaded() {
+    static async polyfillHtmlImports() {
+        if ("import" in document.createElement("link") == false) {
+            const importElms = document.querySelectorAll('link[rel="import"][href]');
+            const requestArr = [];
+            for (const importElm of importElms) {
+                if (importElm.import == null) {
+                    const polyfillPromise = new Promise(async (resolve) => {
+                        const html = await fetch(importElm.href).then(resp => resp.text());
+                        const doc = new DOMParser().parseFromString(html, "text/html");
+                        importElm.import = doc;
+                        resolve();
+                    });
+                    requestArr.push(polyfillPromise);
+                }
+            }
+            await Promise.all(requestArr);
+        }
+    }
+    static async onDOMContentLoaded() {
         document.removeEventListener("DOMContentLoaded", Application.onDOMContentLoaded);
         res_1.default._indexResources();
+        await Application.polyfillHtmlImports();
         Application.determineCurrentActivity();
     }
 }

@@ -8,5 +8,6 @@ export default abstract class Application {
     private static init();
     static defineActivities(activities: UninstantiatedBaseActivity[]): void;
     private static determineCurrentActivity();
+    private static polyfillHtmlImports();
     private static onDOMContentLoaded();
 }
