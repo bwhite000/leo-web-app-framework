@@ -24,18 +24,26 @@
     white-space: nowrap;
 }
 
+/* Change the <option> Element text color in Firefox to not be inherited from the parent <select>. */
+[data-view="action-bar"] > .title select > option {
+    color: #333;
+}
+
 [data-view="action-bar"] > * {
     display: inline-block;
 }
 
 [data-view="action-bar"] > .menu_items {
     display: flex;
+    margin-right: 24px;
 }
 
 [data-view="action-bar"] > .menu_items > .menu_item {
+    box-sizing: border-box;
     cursor: pointer;
     display: flex;
     height: 48px;
+    padding: 12px 12px;
     user-select: none;
     width: 48px;
     vertical-align: middle;
