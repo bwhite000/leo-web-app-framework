@@ -5,13 +5,7 @@ export declare type AlertDialogEventListener = (alertDialog: AlertDialog) => voi
 export declare class Builder {
     context: Context;
     private readonly alertDialog;
-    private onPositiveButtonClickedStreamController;
-    private onNegativeButtonClickedStreamController;
-    private onNeutralButtonClickedStreamControlelr;
     constructor(context: Context);
-    readonly onPositiveButtonClicked: Stream<void>;
-    readonly onNegativeButtonClicked: Stream<void>;
-    readonly onNeutralButtonClicked: Stream<AlertDialog>;
     readonly onCancel: Stream<void>;
     readonly onDismiss: Stream<void>;
     setTitle(title: string): Builder;

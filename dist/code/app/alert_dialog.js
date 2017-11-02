@@ -1,24 +1,11 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const dialog_1 = require("./dialog");
-const stream_1 = require("../core/stream");
 const index_1 = require("../../index");
 class Builder {
     constructor(context) {
         this.context = context;
-        this.onPositiveButtonClickedStreamController = new stream_1.StreamController();
-        this.onNegativeButtonClickedStreamController = new stream_1.StreamController();
-        this.onNeutralButtonClickedStreamControlelr = new stream_1.StreamController();
         this.alertDialog = new AlertDialog(context);
-    }
-    get onPositiveButtonClicked() {
-        return this.onPositiveButtonClickedStreamController.stream;
-    }
-    get onNegativeButtonClicked() {
-        return this.onNegativeButtonClickedStreamController.stream;
-    }
-    get onNeutralButtonClicked() {
-        return this.onNeutralButtonClickedStreamControlelr.stream;
     }
     get onCancel() {
         return this.alertDialog.onCancel;
@@ -40,6 +27,10 @@ class Builder {
     }
     setPositiveButton(text, eventListener) {
         this.alertDialog.setButton(1, text, eventListener);
+        const positiveBtnElm = this.alertDialog.elm.querySelector("ul.buttons-container > li:last-child");
+        if (positiveBtnElm != null) {
+            positiveBtnElm.classList.add("raised");
+        }
         return this;
     }
     setNegativeButton(text, eventListener) {
@@ -69,7 +60,11 @@ class AlertDialog extends dialog_1.default {
     constructor(context) {
         super(context);
         this.elmFrag = index_1.Res.layout.framework_AlertDialog;
-        this.elm = this.elmFrag.querySelector(".alert-dialog-container");
+        const alertDialogContainer = this.elmFrag.querySelector(".alert-dialog-container");
+        if (alertDialogContainer == null) {
+            throw new index_1.ElementNotFoundException();
+        }
+        this.elm = alertDialogContainer;
     }
     get titleElm() {
         const elm = this.elm.querySelector(".title");
@@ -110,12 +105,12 @@ class AlertDialog extends dialog_1.default {
     setButton(buttonIndex, text, eventListener) {
         const buttonElm = document.createElement("li");
         buttonElm.textContent = text;
-        buttonElm.addEventListener("click", ((_) => {
+        buttonElm.addEventListener("click", (_) => {
             if (eventListener != null) {
                 eventListener(this);
             }
             this.dismiss();
-        }).bind(this));
+        });
         this.buttonsContainerElm.appendChild(buttonElm);
     }
     create() {
@@ -123,27 +118,38 @@ class AlertDialog extends dialog_1.default {
         this.isCreated = true;
     }
     show() {
+        super.show();
+        if (this.isShowing) {
+            return;
+        }
         if (this.isCreated == false) {
             this.create();
         }
-        if (this.isShowing == false) {
-            const alertDialogContainerElm = this.elmFrag.querySelector(".alert-dialog-container");
-            alertDialogContainerElm.addEventListener("click", (evt) => {
-                if (evt.target != alertDialogContainerElm) {
-                    evt.preventDefault();
-                    evt.stopPropagation();
-                }
-                else {
-                    this.dismiss();
-                }
-            });
-            document.body.appendChild(this.elmFrag);
-            setTimeout((() => {
-                this.elm.classList.add("show");
-                this.elm.querySelector(".alert-dialog").classList.add("show");
-            }).bind(this), 0);
-            this.isShowing = true;
+        const alertDialogContainerElm = this.elmFrag.querySelector(".alert-dialog-container");
+        if (alertDialogContainerElm == null) {
+            throw new index_1.ElementNotFoundException();
         }
+        const alertDialogElm = this.elm.querySelector(".alert-dialog");
+        if (alertDialogElm == null) {
+            throw new index_1.ElementNotFoundException();
+        }
+        alertDialogContainerElm.addEventListener("click", (evt) => {
+            if (evt.target != alertDialogContainerElm) {
+                evt.preventDefault();
+                evt.stopPropagation();
+            }
+            else {
+                this.dismiss();
+            }
+        });
+        document.body.appendChild(this.elmFrag);
+        const alertDialogWidth = alertDialogElm.clientWidth;
+        alertDialogElm.style.left = `calc(50% - ${Math.floor(alertDialogWidth / 2)}px)`;
+        setTimeout((() => {
+            this.elm.classList.add("show");
+            alertDialogElm.classList.add("show");
+        }).bind(this), 0);
+        this.isShowing = true;
     }
 }
 AlertDialog.Builder = Builder;

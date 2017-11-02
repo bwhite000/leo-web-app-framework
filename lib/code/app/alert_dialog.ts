@@ -1,6 +1,6 @@
 import Context from "./context"
 import Dialog from "./dialog"
-import { StreamController, Stream } from "../core/stream"
+import { Stream } from "../core/stream"
 import { ElementNotFoundException, Res } from "../../index"
 
 export type AlertDialogEventListener = (alertDialog: AlertDialog) => void;
@@ -8,31 +8,15 @@ export type AlertDialogEventListener = (alertDialog: AlertDialog) => void;
 export class Builder {
     private readonly alertDialog: AlertDialog;
 
-    private onPositiveButtonClickedStreamController = new StreamController<void>();
-    private onNegativeButtonClickedStreamController = new StreamController<void>();
-    private onNeutralButtonClickedStreamControlelr = new StreamController<AlertDialog>();
-
     constructor(public context: Context) {
         this.alertDialog = new AlertDialog(context);
     }
 
-    get onPositiveButtonClicked(): Stream<void> {
-        return this.onPositiveButtonClickedStreamController.stream;
-    }
-
-    get onNegativeButtonClicked(): Stream<void> {
-        return this.onNegativeButtonClickedStreamController.stream;
-    }
-
-    get onNeutralButtonClicked(): Stream<AlertDialog> {
-        return this.onNeutralButtonClickedStreamControlelr.stream;
-    }
-
-    get onCancel() {
+    get onCancel(): Stream<void> {
         return this.alertDialog.onCancel;
     }
 
-    get onDismiss() {
+    get onDismiss(): Stream<void> {
         return this.alertDialog.onDismiss;
     }
 
@@ -68,6 +52,11 @@ export class Builder {
 
     setPositiveButton(text: string, eventListener?: AlertDialogEventListener): Builder {
         this.alertDialog.setButton(1, text, eventListener);
+
+        const positiveBtnElm = this.alertDialog.elm.querySelector("ul.buttons-container > li:last-child");
+        if (positiveBtnElm != null) {
+            positiveBtnElm.classList.add("raised");
+        }
 
         return <Builder>this;
     }
@@ -130,7 +119,10 @@ export default class AlertDialog extends Dialog {
         super(context);
 
         this.elmFrag = Res.layout.framework_AlertDialog;
-        this.elm = <HTMLElement|null>this.elmFrag.querySelector(".alert-dialog-container");
+
+        const alertDialogContainer = <HTMLElement|null>this.elmFrag.querySelector(".alert-dialog-container");
+        if (alertDialogContainer == null) { throw new ElementNotFoundException() }
+        this.elm = alertDialogContainer;
     }
 
     private get titleElm() {
@@ -168,7 +160,7 @@ export default class AlertDialog extends Dialog {
     setCustomTitle(view: HTMLElement): void {
         const titleElm = this.titleElm;
 
-        // Clear any previous value.
+        // Clear any previous child Elements value.
         titleElm.innerHTML = "";
 
         // Set the custom title Element.
@@ -179,24 +171,27 @@ export default class AlertDialog extends Dialog {
     setView(view: Node) {
         const messageElm = this.messageElm;
 
+        // Clear any existing child Elements.
         messageElm.innerHTML = "";
+
+        // Add the new Element view to the [messageElm].
         messageElm.appendChild(view);
     }
 
-    //setIcon(drawableResId: string): void {}
+    // setIcon(drawableResId: string): void {}
 
     setButton(buttonIndex: number, text: string, eventListener?: AlertDialogEventListener) {
         const buttonElm = document.createElement("li");
         buttonElm.textContent = text;
 
         // Add the button's click event listener.
-        buttonElm.addEventListener("click", ((_: MouseEvent) => {
+        buttonElm.addEventListener("click", (_: MouseEvent) => {
             if (eventListener != null) {
                 eventListener(<AlertDialog>this);
             }
 
             (<AlertDialog>this).dismiss();
-        }).bind(this));
+        });
 
         this.buttonsContainerElm.appendChild(buttonElm);
     }
@@ -210,28 +205,52 @@ export default class AlertDialog extends Dialog {
 
     /** @override */
     show(): void {
+        super.show();
+
+        // If showing already, do nothing.
+        if (this.isShowing) {
+            return;
+        }
+
+        // If the Element has not been created yet, create it.
         if (this.isCreated == false) {
             this.create();
         }
 
-        if (this.isShowing == false) {
-            const alertDialogContainerElm = this.elmFrag.querySelector(".alert-dialog-container");
-            alertDialogContainerElm.addEventListener("click", (evt: MouseEvent) => {
-                if (evt.target != alertDialogContainerElm) {
-                    evt.preventDefault();
-                    evt.stopPropagation();
-                } else {
-                    this.dismiss();
-                }
-            });
+        const alertDialogContainerElm = <HTMLElement|null>this.elmFrag.querySelector(".alert-dialog-container");
+        if (alertDialogContainerElm == null) { throw new ElementNotFoundException() }
 
-            document.body.appendChild(this.elmFrag);
-            setTimeout((() => {
-                this.elm.classList.add("show");
-                this.elm.querySelector(".alert-dialog").classList.add("show");
-            }).bind(this), 0);
-            this.isShowing = true;
-        }
+        const alertDialogElm = <HTMLElement|null>this.elm.querySelector(".alert-dialog");
+        if (alertDialogElm == null) { throw new ElementNotFoundException() }
+
+        // Add the event listener to cancel the dialog, if permitted by the developer.
+        alertDialogContainerElm.addEventListener("click", (evt: MouseEvent) => {
+            if (evt.target != alertDialogContainerElm) {
+                evt.preventDefault();
+                evt.stopPropagation();
+            } else {
+                this.dismiss();
+            }
+        });
+
+        // Add the [DocumentFragment] to the webpage.
+        document.body.appendChild(this.elmFrag);
+
+        // Get the width of the alert dialog (hidden visually) now that it has been inserted onto the page.
+        const alertDialogWidth = alertDialogElm.clientWidth;
+
+        // Center the Element horizontally on the screen.
+        alertDialogElm.style.left = `calc(50% - ${Math.floor(alertDialogWidth/2)}px)`;
+
+        // Wait for the initial paint, then insert the Element to allow the transition to happen.
+        setTimeout((() => {
+            // Show the Elements visually (with transitions).
+            this.elm.classList.add("show");
+            alertDialogElm.classList.add("show");
+        }).bind(this), 0);
+
+        // Set the value that the Element is currently showing.
+        this.isShowing = true;
     }
 
     /**
