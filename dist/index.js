@@ -32,3 +32,5 @@ var stream_1 = require("./code/core/stream");
 exports.StreamController = stream_1.StreamController;
 exports.StreamSubscription = stream_1.StreamSubscription;
 exports.Stream = stream_1.Stream;
+var toast_1 = require("./code/widget/toast");
+exports.Toast = toast_1.default;

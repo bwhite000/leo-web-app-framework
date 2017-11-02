@@ -15,3 +15,5 @@ export { default as InvalidArgumentTypeException } from "./code/core/invalid_arg
 export { default as Res } from "./code/core/res"
 export { default as ResourceNotFoundException } from "./code/core/resource_not_found_exception"
 export { StreamController, StreamSubscription, Stream } from "./code/core/stream"
+
+export { default as Toast } from "./code/widget/toast"
