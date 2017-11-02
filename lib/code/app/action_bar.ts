@@ -38,8 +38,6 @@ export default class ActionBar {
             iconElm.title = item.title;
             iconElm.dataset.id = item.id;
 
-            iconElm.addEventListener("click", this._onMenuItemSelected);
-
             this._addMenuItem(iconElm);
         }
     }
@@ -88,14 +86,17 @@ export default class ActionBar {
 
         const container = document.createElement("div");
         container.classList.add("menu_item");
+
+        container.addEventListener("click", this._onMenuItemSelected);
+
         container.appendChild(iconElm);
 
         actionBarElm.appendChild(container);
     }
 
     private _onMenuItemSelected(evt: MouseEvent): void {
-        const elm = <HTMLElement>evt.currentTarget;
-        const dataID = elm.dataset.id.replace(/^@\+id\//, "");
+        const menuItemElm = <HTMLElement>evt.currentTarget;
+        const dataID = menuItemElm.querySelector("[data-id]").dataset.id.replace(/^@\+id\//, "");
         const resId = Res.id[dataID];
 
         if (dataID != null) {

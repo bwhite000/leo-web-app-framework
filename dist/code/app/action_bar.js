@@ -22,7 +22,6 @@ class ActionBar {
             const iconElm = res_1.default.getResourceById(res_1.default.id[iconName]);
             iconElm.title = item.title;
             iconElm.dataset.id = item.id;
-            iconElm.addEventListener("click", this._onMenuItemSelected);
             this._addMenuItem(iconElm);
         }
     }
@@ -67,12 +66,13 @@ class ActionBar {
         }
         const container = document.createElement("div");
         container.classList.add("menu_item");
+        container.addEventListener("click", this._onMenuItemSelected);
         container.appendChild(iconElm);
         actionBarElm.appendChild(container);
     }
     _onMenuItemSelected(evt) {
-        const elm = evt.currentTarget;
-        const dataID = elm.dataset.id.replace(/^@\+id\//, "");
+        const menuItemElm = evt.currentTarget;
+        const dataID = menuItemElm.querySelector("[data-id]").dataset.id.replace(/^@\+id\//, "");
         const resId = res_1.default.id[dataID];
         if (dataID != null) {
             this._onMenuItemSelectedStreamController.add(resId);
